@@ -1,0 +1,1 @@
+"""Ivan laittaa tänne tarvittavat alustavat funktiot"""
