@@ -1,0 +1,5 @@
+sqlmodel
+uvicorn
+fastapi
+streamlit
+fastapi[standard]
