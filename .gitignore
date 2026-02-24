@@ -1,3 +1,4 @@
 # ENVIRONMENT VARIABLES
 .env
 pyvenv.cfg
+.venv

@@ -1,12 +1,16 @@
 import os
-import sqlite3
+from fastcrud import FastCRUD, crud_router
 from dotenv import load_dotenv
 from sqlite3 import Error
 from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, Query
-from packaging.metadata import Metadata
+from sqlalchemy.orm import session
 from sqlmodel import Field, Session, SQLModel, create_engine, select
-from src.frontend.tilaus import Tilaus
+from schemas import TeeTilausSchema, PaivitaTilausSchema
+from models import Tilaus
+# from src.frontend.tilaus import Tilaus
+
+
 # Tässä lataan ympäristö muuttujia (mikäli niitä tarvitaan)
 load_dotenv()
 
@@ -61,5 +65,17 @@ app = FastAPI()
 def on_startup():
     create_kanta()
 
-
-
+tilaus_router = crud_router(
+    session=get_session,
+    model=TilausMalli,
+    create_schema=TeeTilausSchema,
+    update_schema=PaivitaTilausSchema,
+    path="/tilaus",
+    tags=["Tilaus"],
+)
+@app.post("/tilaus", tags=["Tilaus"])
+def tee_tilaus(tilaus: TilausMalli) -> TilausMalli:
+    session.add(tilaus)
+    session.commit()
+    session.refresh(tilaus)
+    return tilaus
