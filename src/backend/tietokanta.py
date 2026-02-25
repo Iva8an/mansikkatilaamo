@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 from sqlite3 import Error
 from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, Query
-from sqlalchemy.orm import session
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 from schemas import TeeTilausSchema, PaivitaTilausSchema
 from models import Tilaus
@@ -74,7 +73,7 @@ tilaus_router = crud_router(
     tags=["Tilaus"],
 )
 @app.post("/tilaus", tags=["Tilaus"])
-def tee_tilaus(tilaus: TilausMalli) -> TilausMalli:
+def tee_tilaus(tilaus: TilausMalli, session: SessionDep) -> TilausMalli:
     session.add(tilaus)
     session.commit()
     session.refresh(tilaus)

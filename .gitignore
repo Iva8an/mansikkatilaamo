@@ -2,3 +2,4 @@
 .env
 pyvenv.cfg
 .venv
+.idea
