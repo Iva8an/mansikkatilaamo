@@ -1,4 +1,5 @@
 import streamlit as st
+import requests
 from datetime import date, datetime
 if "tila" not in st.session_state:
     st.session_state.tila = "kalenteri"
@@ -33,12 +34,28 @@ if st.session_state.tila=="varaus":
     st.session_state.mansikoita =st.number_input("Mansikka laatikoita. 1 laatikko= 5kg ~10 ltr",0,st.session_state.max,1)
     st.write("hinta yhteensä", st.session_state.mansikoita * st.session_state.mansikkahinta, "€")
     st.session_state.nimi = st.text_input("Nimi")
+    st.session_state.email = st.text_input("Email")
     st.session_state.puhelinnumero = st.text_input("Puhelinnumero")
     st.session_state.muu =st.text_area("Muuta infoa")
     if st.button("VARAA MANSIKAT!!"):
+        tiedot = {
+            "email": st.session_state.email,
+            "maara": st.session_state.mansikoita,
+            "puh": st.session_state.puhelinnumero,
+            "pvm": str(st.session_state.paiva)
+        }
+        testi = {
+            "name": "st.session_state.puhelinnumero",
+            "description": "st.session_state.muu",
+        }
         st.session_state.varaustunnus = int (datetime.today().timestamp()*100000) - 177250000000000
-        st.session_state.tila = "valmis"
-        st.rerun()
+        vastaus = requests.post("http://localhost:8000/tilaus",json=testi)
+        if vastaus.status_code == 200:
+            st.session_state.tila = "valmis"
+            st.rerun()
+        else:
+            st.session_state.tila = "virhe"
+            st.rerun()
 if st.session_state.tila=="valmis":
     st.write("Mansikat varattu. Varaus tunnus:", st.session_state.varaustunnus)
     st.write("Nimi: ", st.session_state.nimi)
@@ -47,3 +64,6 @@ if st.session_state.tila=="valmis":
     st.write("varattu määrä: ", st.session_state.mansikoita)
     st.write("hinta yhteensä: ", st.session_state.mansikoita * st.session_state.mansikkahinta, "€")
     st.write("Tarkista vielä tiedot ja ole hyvä ja ole yhteydessä jos on muutettavaa! :)")
+
+if st.session_state.tila=="virhe":
+    st.write("tilauksessa tapahtui virhe yritä uudelleen myöhemmin")
