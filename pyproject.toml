@@ -11,4 +11,5 @@ dependencies = [
     "fastcrud>=0.21.0",
     "pydantic>=2.12.5",
     "sqlmodel>=0.0.37",
+    "streamlit>=1.55.0",
 ]
