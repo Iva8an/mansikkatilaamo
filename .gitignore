@@ -5,3 +5,7 @@ pyvenv.cfg
 .idea
 misc.xml
 mansikoidentilaus.iml
+kanta.db
+settings.json
+tests\__pycache__
+*.pyc
