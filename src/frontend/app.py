@@ -1,3 +1,5 @@
+from http.client import HTTPException
+
 import streamlit as st
 import requests
 from datetime import date, datetime
@@ -49,13 +51,22 @@ if st.session_state.tila=="varaus":
             "description": "st.session_state.muu",
         }
         st.session_state.varaustunnus = int (datetime.today().timestamp()*100000) - 177250000000000
-        vastaus = requests.post("http://localhost:8000/tilaus",json=testi)
-        if vastaus.status_code == 200:
+        #vastaus = requests.post("http://localhost:8000/tilaus", json=testi)"""
+        onnistuu_laatikoiden_maara = requests.get(f"http://localhost:8000/saatavuus/{tiedot["pvm"]}", json=tiedot)
+        if onnistuu_laatikoiden_maara:
+            requests.post("http://localhost:8000/tilaus", json=testi)
             st.session_state.tila = "valmis"
             st.rerun()
         else:
-            st.session_state.tila = "virhe"
-            st.rerun()
+            st.write(f"Ei onnistu varaamaan {tiedot["maara"]} laatikkoa päivälle {tiedot["pvm"]}, {onnistuu_laatikoiden_maara.status_code} ")
+
+       # if vastaus.status_code == 200:
+        #    st.session_state.tila = "valmis"
+        #    st.rerun()
+       # else:
+        #    st.session_state.tila = "virhe"
+         #   st.rerun()
+
 if st.session_state.tila=="valmis":
     st.write("Mansikat varattu. Varaus tunnus:", st.session_state.varaustunnus)
     st.write("Nimi: ", st.session_state.nimi)

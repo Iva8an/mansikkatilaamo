@@ -4,10 +4,10 @@ from dotenv import load_dotenv
 from sqlite3 import Error
 from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, Query
+from sqlalchemy.sql.coercions import expect
 from sqlmodel import Field, Session, SQLModel, create_engine, select
-from schemas import TeeTilausSchema, PaivitaTilausSchema, PaivitaSaatavuusSchema
+from schemas import TeeTilausSchema, PaivitaTilausSchema, PaivitaSaatavuusSchema, AnnaSaatavuusSchema
 from models import Tilaus
-from src.backend.schemas import AnnaSaatavuusSchema
 
 # from src.frontend.tilaus import Tilaus
 
@@ -22,12 +22,15 @@ class TilausMalli(SQLModel, table=True):
     email: str = Field(index=True)
     maara: int | None = Field(default=0, index=True)
     puh: str
+    muuta: str
     pvm: str
 
 class SaatavuusMalli(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     pvm: str
-    maara: int | None = Field(default=0, index=True)
+    laatikoden_maara: int | None = Field(default=0, index=True)
+    hinta: int = Field(default=50)
+    max: int = Field(default=50)
 
 # Funktio, joka tarkistaa sqlite yhteyden kanta.db:hen, ja palauttaa onnistuneen yhteyden.
 # Ei kuitenkaan ole toistaiseksi käytössä
@@ -76,33 +79,24 @@ app = FastAPI()
 @app.on_event("startup")
 def on_startup():
     create_kannat()
-
-tilaus_router = crud_router(
-    session=get_session1,
-    model=TilausMalli,
-    create_schema=TeeTilausSchema,
-    update_schema=PaivitaTilausSchema,
-    path="/tilaus",
-    tags=["Tilaus"]
-)
-saatavuus_router = crud_router(
-    session=get_session2,
-    model=SaatavuusMalli,
-    create_schema=AnnaSaatavuusSchema,
-    update_schema=PaivitaSaatavuusSchema,
-    path="/saatavuus",
-    tags=["Saatavuus"]
-)
 @app.post("/tilaus", tags=["Tilaus"])
 def tee_tilaus(tilaus: TilausMalli, session: SessionDep1) -> TilausMalli:
     session.add(tilaus)
     session.commit()
     session.refresh(tilaus)
     return tilaus
+@app.get("/saatavuus/{pvm}", tags=["Saatavuus"])
+async def saatavuus_rajoitteet(pvm: str, session: SessionDep2) -> int:
+    try:
+        max = session.exec(select(SaatavuusMalli.max).where(SaatavuusMalli.pvm == pvm)).first()
+        return max
+    except Exception as e:
+        return {"virhe": e}
 
-@app.get("/saatavuus", tags=["Saatavuus"])
-def get_saatavuus(saatavuus: SaatavuusMalli, session: SessionDep2) -> SaatavuusMalli:
-    session.add(saatavuus)
-    session.commit()
-    session.refresh(saatavuus)
-    return saatavuus
+"""@app.get("/maara", tags=["Tilaus"])  
+def get_maxtilaus(pvm: str, session: SessionDep2) -> int:
+    max_maara = session.exec(select(rajoitteet.max).where(rajoitteet.pvm == pvm)).first()
+    if not max_maara:
+        return 404
+    return max_maara
+"""
