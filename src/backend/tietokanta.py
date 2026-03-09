@@ -32,23 +32,13 @@ class SaatavuusMalli(SQLModel, table=True):
     hinta: int = Field(default=50)
     max: int = Field(default=50)
 
-# Funktio, joka tarkistaa sqlite yhteyden kanta.db:hen, ja palauttaa onnistuneen yhteyden.
-# Ei kuitenkaan ole toistaiseksi käytössä
-"""def create_connection(path):
-    connection = None
-    try:
-        connection = sqlite3.connect(path)
-        print("Connection to SQLite DB successful")
-    except Error as e:
-        print(f"The error '{e}' occurred")
 
-    return connection
-"""
+
 tilauskanta_nimi = "tilauskanta.db"
 saatavuuskanta_nimi = "saatavuuskanta.db"
 # sqlite:/// viittaa siihen, että kanta on olemassa vain sinä hetkenä, kun  ohjelma on käynnissä
+tilauskanta_url = f"sqlite:///{tilauskanta_nimi}"
 saatavuuskanta_url = f"sqlite:///{saatavuuskanta_nimi}"
-tilauskanta_url = f"sqlite:///{saatavuuskanta_nimi}"
 # Tämän tarkoituksena on varmistaa että olisi vain yksi thread per. request
 connect_args = {"check_same_thread": False}
 
@@ -79,7 +69,7 @@ app = FastAPI()
 @app.on_event("startup")
 def on_startup():
     create_kannat()
-@app.post("/tilaus", tags=["Tilaus"])
+@app.post("/tilaus/", tags=["Tilaus"])
 def tee_tilaus(tilaus: TilausMalli, session: SessionDep1) -> TilausMalli:
     session.add(tilaus)
     session.commit()
@@ -88,8 +78,8 @@ def tee_tilaus(tilaus: TilausMalli, session: SessionDep1) -> TilausMalli:
 @app.get("/saatavuus/{pvm}", tags=["Saatavuus"])
 async def saatavuus_rajoitteet(pvm: str, session: SessionDep2) -> int:
     try:
-        max = session.exec(select(SaatavuusMalli.max).where(SaatavuusMalli.pvm == pvm)).first()
-        return max
+        saatavuus = session.exec(select(SaatavuusMalli.laatikoden_maara).where(SaatavuusMalli.pvm == pvm)).first()
+        return saatavuus
     except Exception as e:
         return {"virhe": e}
 

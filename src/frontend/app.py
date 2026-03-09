@@ -1,8 +1,10 @@
 from http.client import HTTPException
+from time import strptime
 
 import streamlit as st
 import requests
 from datetime import date, datetime
+import random
 if "tila" not in st.session_state:
     st.session_state.tila = "kalenteri"
 if "paiva" not in st.session_state:
@@ -41,10 +43,12 @@ if st.session_state.tila=="varaus":
     st.session_state.muu =st.text_area("Muuta infoa")
     if st.button("VARAA MANSIKAT!!"):
         tiedot = {
+            "id": random.randrange(100000,1000000000000),
             "email": st.session_state.email,
             "maara": st.session_state.mansikoita,
             "puh": st.session_state.puhelinnumero,
-            "pvm": str(st.session_state.paiva)
+            "muuta": st.session_state.muu,
+            "pvm": datetime.strftime(st.session_state.paiva, "%Y-%m-%d")
         }
         testi = {
             "name": "st.session_state.puhelinnumero",
@@ -52,9 +56,9 @@ if st.session_state.tila=="varaus":
         }
         st.session_state.varaustunnus = int (datetime.today().timestamp()*100000) - 177250000000000
         #vastaus = requests.post("http://localhost:8000/tilaus", json=testi)"""
-        onnistuu_laatikoiden_maara = requests.get(f"http://localhost:8000/saatavuus/{tiedot["pvm"]}", json=tiedot)
+        onnistuu_laatikoiden_maara = requests.get(f"http://localhost:8000/saatavuus/{tiedot["pvm"]}")
         if onnistuu_laatikoiden_maara:
-            requests.post("http://localhost:8000/tilaus", json=testi)
+            requests.post(f"http://localhost:8000/tilaus/", json=tiedot)
             st.session_state.tila = "valmis"
             st.rerun()
         else:
