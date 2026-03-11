@@ -1,63 +1,43 @@
-import os
+import gspread
+from google.oauth2.service_account import Credentials
+from translate import Translator
+from datetime import datetime
+import requests
 
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
+scopes = [
+    "https://www.googleapis.com/auth/spreadsheets"
+]
+creds = Credentials.from_service_account_file("credentials.json", scopes=scopes)
+client = gspread.authorize(creds)
+# Saatavuus-kannalle sheets
+saatavuus_id = "1yQdxl4U8LaGJmmAncDeP7FgVRawBJd7ikgotX1Vr0eM"
+# Tilaus-kannale sheets
+tilaus_id = "1dzPS61cZY1aX_DAcOWmxmnd-zE9yhSQrNl8WKtlC1aA"
+
+saatavuus_workbook = client.open_by_key(saatavuus_id)
+tilaus_workbook = client.open_by_key(saatavuus_id)
+
+tl = Translator(to_lang="fi")
+month = datetime.now().strftime("%B")
+tama_kuu = tl.translate(month)
+tanaan = datetime.today().strftime("%Y-%m-%d")
 
 
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+uusi_saatavuussheet_nimi = f"{tama_kuu}"
+saatavuus_sheet_lista = map(lambda x: x.title, saatavuus_workbook.worksheets())
 
-SAMPLE_SPREADSHEET_ID = "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
-SAMPLE_RANGE_NAME = "Class Data!A2:E"
+uusi_tilaussheet_nimi = f"{tama_kuu}"
+tilaus_sheet_lista = map(lambda x: x.title, tilaus_workbook.worksheets())
 
-def main():
-      """Shows basic usage of the Sheets API.
-      Prints values from a sample spreadsheet.
-      """
-      creds = None
-      credentials = os.getcwd() + "/credentials.json"
-      # The file token.json stores the user's access and refresh tokens, and is
-      # created automatically when the authorization flow completes for the first
-      # time.
-      if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-      # If there are no (valid) credentials available, let the user log in.
-      if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-          creds.refresh(Request())
-        else:
-          flow = InstalledAppFlow.from_client_secrets_file(
-              credentials, SCOPES
-          )
-          creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open("token.json", "w") as token:
-          token.write(creds.to_json())
+#Tarkistetaanko onko sheets-taulu jo olemassa
+if uusi_saatavuussheet_nimi in saatavuus_sheet_lista:
+    saatavuus_sheet = saatavuus_workbook.worksheet(f"{tama_kuu}")
+else:
+    saatavuus_sheet = saatavuus_workbook.add_worksheet(f"{tama_kuu}", rows=31, cols=1)
 
-      try:
-        service = build("sheets", "v4", credentials=creds)
+if uusi_tilaussheet_nimi in tilaus_sheet_lista:
+    tilaus_sheet = saatavuus_workbook.worksheet(f"{tama_kuu}")
+else:
+    tilaus_sheet = saatavuus_workbook.add_worksheet(f"{tama_kuu}", rows=31, cols=1)
 
-        # Call the Sheets API
-        sheet = service.spreadsheets()
-        result = (
-            sheet.values()
-            .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, range=SAMPLE_RANGE_NAME)
-            .execute()
-        )
-        values = result.get("values", [])
-
-        if not values:
-          print("No data found.")
-          return
-
-        print("Name, Major:")
-        for row in values:
-          # Print columns A and E, which correspond to indices 0 and 4.
-          print(f"{row[0]}, {row[4]}")
-      except HttpError as err:
-        print(err)
-
-if __name__ == "__main__":
-  main()
+requests.get("http://localhost/tilaus")

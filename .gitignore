@@ -11,3 +11,4 @@ tests\__pycache__
 *.pyc
 saatavuuskanta.db
 credentials.json
+token.json

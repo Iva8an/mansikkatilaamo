@@ -41,9 +41,10 @@ if st.session_state.tila=="varaus":
     st.session_state.email = st.text_input("Email")
     st.session_state.puhelinnumero = st.text_input("Puhelinnumero")
     st.session_state.muu =st.text_area("Muuta infoa")
+    st.session_state.varaustunnus = int(datetime.today().timestamp() * 100000) - 177250000000000
     if st.button("VARAA MANSIKAT!!"):
         tiedot = {
-            "id": random.randrange(100000,1000000000000),
+            "id": st.session_state.varaustunnus,
             "email": st.session_state.email,
             "maara": st.session_state.mansikoita,
             "puh": st.session_state.puhelinnumero,
@@ -54,7 +55,6 @@ if st.session_state.tila=="varaus":
             "name": "st.session_state.puhelinnumero",
             "description": "st.session_state.muu",
         }
-        st.session_state.varaustunnus = int (datetime.today().timestamp()*100000) - 177250000000000
         #vastaus = requests.post("http://localhost:8000/tilaus", json=testi)"""
         onnistuu_laatikoiden_maara = requests.get(f"http://localhost:8000/saatavuus/{tiedot["pvm"]}")
         if onnistuu_laatikoiden_maara:
