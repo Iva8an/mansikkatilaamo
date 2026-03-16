@@ -2,7 +2,7 @@ import datetime
 
 class Tilaus:
     
-    def Valitse_nouto_pvm() -> datetime:
+    def Valitse_nouto_pvm():
         """Palauttaa pvm kalenterista"""
 
     def Kuinkapaljon_mita() -> tuple:
