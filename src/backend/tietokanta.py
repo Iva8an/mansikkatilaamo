@@ -28,9 +28,9 @@ class TilausMalli(SQLModel, table=True):
 class SaatavuusMalli(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     pvm: str
-    laatikoden_maara: int | None = Field(default=0, index=True)
-    hinta: int = Field(default=50)
-    max: int = Field(default=50)
+    laatikoden_maara: int
+    hinta: int
+    max: int
 
 
 
@@ -95,10 +95,9 @@ async def saatavuus_rajoitteet(pvm: str, session: SessionDep2) -> int:
     except Exception as e:
         return {"virhe": e}
 
-"""@app.get("/maara", tags=["Tilaus"])  
-def get_maxtilaus(pvm: str, session: SessionDep2) -> int:
-    max_maara = session.exec(select(rajoitteet.max).where(rajoitteet.pvm == pvm)).first()
-    if not max_maara:
-        return 404
-    return max_maara
-"""
+@app.post("/saatavuus/", tags=["Saatavuus"])
+def lisaa_saatavuus(saatavuus: SaatavuusMalli, session: SessionDep2) -> SaatavuusMalli:
+    session.add(saatavuus)
+    session.commit()
+    session.refresh(saatavuus)
+    return saatavuus

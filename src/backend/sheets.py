@@ -2,6 +2,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 from translate import Translator
 from datetime import datetime
+import random
 import requests
 
 scopes = [
@@ -33,11 +34,35 @@ tilaus_sheet_lista = map(lambda x: x.title, tilaus_workbook.worksheets())
 if uusi_saatavuussheet_nimi in saatavuus_sheet_lista:
     saatavuus_sheet = saatavuus_workbook.worksheet(f"{tama_kuu}")
 else:
-    saatavuus_sheet = saatavuus_workbook.add_worksheet(f"{tama_kuu}", rows=31, cols=1)
+    saatavuus_sheet = saatavuus_workbook.add_worksheet(f"{tama_kuu}", rows=31, cols=4)
 
 if uusi_tilaussheet_nimi in tilaus_sheet_lista:
     tilaus_sheet = saatavuus_workbook.worksheet(f"{tama_kuu}")
 else:
-    tilaus_sheet = saatavuus_workbook.add_worksheet(f"{tama_kuu}", rows=31, cols=1)
+    tilaus_sheet = saatavuus_workbook.add_worksheet(f"{tama_kuu}", rows=31, cols=4)
 
-requests.get("http://localhost/tilaus")
+
+paivamaarat = saatavuus_sheet.col_values(1)
+paivamaara_cells = {}
+laatikot_cells = {}
+hinta_cells = {}
+max_cells = {}
+for i in range(1, len(paivamaarat)):
+    paivamaara_cells.update({paivamaarat[i] : f"A{i+1}"})
+    laatikot_cells.update({paivamaarat[i]: f"B{i+1}"})
+    hinta_cells.update({paivamaarat[i]: f"C{i+1}"})
+    max_cells.update({paivamaarat[i]: f"D{i+1}"})
+paivamaara_tanaan = saatavuus_sheet.acell(f"{paivamaara_cells.get(tanaan)}").value
+laatikot_tanaan = saatavuus_sheet.acell(f"{laatikot_cells.get(tanaan)}").value
+hinta_tanaan = saatavuus_sheet.acell(f"{hinta_cells.get(tanaan)}").value
+max_tanaan = saatavuus_sheet.acell(f"{max_cells.get(tanaan)}").value
+
+saatavuus_tanaan = {
+    "id": random.randrange(1000000,10000000000),
+    "pvm" : f"{paivamaara_tanaan}",
+    "laatikoiden_maara" : laatikot_tanaan,
+    "hinta": hinta_tanaan,
+    "max": max_tanaan
+}
+print(saatavuus_tanaan)
+requests.post("http://localhost:8000/saatavuus/", json=saatavuus_tanaan)
