@@ -15,7 +15,7 @@ import requests
 
         vastaus = requests.post('http://localhost:8000/tilaus/', json=payload)
         assert vastaus.status_code == 200 # add assertion here"""
-
+"""
 class TestaaSaatavuus(unittest.TestCase):
     
     def testaa_tiedon_saanti(self):
@@ -44,3 +44,4 @@ class TestaaMockSaatavuus(unittest.TestCase):
           """"""
 
 
+"""
