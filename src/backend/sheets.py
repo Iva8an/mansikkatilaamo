@@ -16,7 +16,7 @@ saatavuus_id = "1yQdxl4U8LaGJmmAncDeP7FgVRawBJd7ikgotX1Vr0eM"
 tilaus_id = "1dzPS61cZY1aX_DAcOWmxmnd-zE9yhSQrNl8WKtlC1aA"
 
 saatavuus_workbook = client.open_by_key(saatavuus_id)
-tilaus_workbook = client.open_by_key(saatavuus_id)
+tilaus_workbook = client.open_by_key(tilaus_id)
 
 tl = Translator(to_lang="fi")
 month = datetime.now().strftime("%B")
@@ -39,7 +39,7 @@ else:
 if uusi_tilaussheet_nimi in tilaus_sheet_lista:
     tilaus_sheet = saatavuus_workbook.worksheet(f"{tama_kuu}")
 else:
-    tilaus_sheet = saatavuus_workbook.add_worksheet(f"{tama_kuu}", rows=31, cols=4)
+    tilaus_sheet = saatavuus_workbook.add_worksheet(f"{tama_kuu}", rows=100000000, cols=7)
 
 
 paivamaarat = saatavuus_sheet.col_values(1)
@@ -60,9 +60,25 @@ max_tanaan = saatavuus_sheet.acell(f"{max_cells.get(tanaan)}").value
 saatavuus_tanaan = {
     "id": random.randrange(1000000,10000000000),
     "pvm" : f"{paivamaara_tanaan}",
-    "laatikoiden_maara" : laatikot_tanaan,
+    "laatikoidenMaara" : int(laatikot_tanaan),
     "hinta": hinta_tanaan,
     "max": max_tanaan
 }
-print(saatavuus_tanaan)
+print(list(tilaus_sheet_lista))
+print(tama_kuu)
 requests.post("http://localhost:8000/saatavuus/", json=saatavuus_tanaan)
+
+uudet_tilaukset = requests.get(f"http://localhost:8000/tilaus/{tanaan}")
+print(uudet_tilaukset.json())
+tilaus = [
+    [
+        uudet_tilaukset.json()[0].get("id"),
+        uudet_tilaukset.json()[0].get("email"),
+        uudet_tilaukset.json()[0].get("maara"),
+        uudet_tilaukset.json()[0].get("puh"),
+        uudet_tilaukset.json()[0].get("muuta"),
+        uudet_tilaukset.json()[0].get("pvm"),
+     ]
+]
+print(tilaus)
+tilaus_sheet.update(f"A2:G2", tilaus)

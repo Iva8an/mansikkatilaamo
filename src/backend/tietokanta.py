@@ -28,7 +28,7 @@ class TilausMalli(SQLModel, table=True):
 class SaatavuusMalli(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     pvm: str
-    laatikoden_maara: int
+    laatikoidenMaara: int
     hinta: int
     max: int
 
@@ -80,8 +80,8 @@ def tee_tilaus(tilaus: TilausMalli, session: SessionDep1) -> TilausMalli:
 def anna_tilaus(pvm: str, session: SessionDep1):
    try:
        with Session(engine1) as session:
-           statement = select(TilausMalli).where(TilausMalli.pvm == pvm).first()
-           results = session.execute(statement)
+           statement = select(TilausMalli).where(TilausMalli.pvm == pvm)
+           results = session.exec(statement)
            tilaus = results.all()
            return tilaus
    except Exception as e:
@@ -90,7 +90,7 @@ def anna_tilaus(pvm: str, session: SessionDep1):
 @app.get("/saatavuus/{pvm}", tags=["Saatavuus"])
 async def saatavuus_rajoitteet(pvm: str, session: SessionDep2) -> int:
     try:
-        saatavuus = session.exec(select(SaatavuusMalli.laatikoden_maara).where(SaatavuusMalli.pvm == pvm)).first()
+        saatavuus = session.exec(select(SaatavuusMalli.laatikodenMaara).where(SaatavuusMalli.pvm == pvm)).first()
         return saatavuus
     except Exception as e:
         return {"virhe": e}
