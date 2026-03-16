@@ -6,8 +6,8 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlalchemy.sql.coercions import expect
 from sqlmodel import Field, Session, SQLModel, create_engine, select
-from schemas import TeeTilausSchema, PaivitaTilausSchema, PaivitaSaatavuusSchema, AnnaSaatavuusSchema
-from models import Tilaus
+#from schemas import TeeTilausSchema, PaivitaTilausSchema, PaivitaSaatavuusSchema, AnnaSaatavuusSchema
+#from models import Tilaus
 
 # from src.frontend.tilaus import Tilaus
 

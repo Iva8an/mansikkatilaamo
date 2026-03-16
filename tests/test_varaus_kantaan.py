@@ -41,9 +41,6 @@ class TestaaEpaonnistunutTilaus(unittest.TestCase):
 class TestaaMockSaatavuus(unittest.TestCase):
      
      def testaa_palautuuko_arvot(self):
-          
-     
-if __name__ == '__main__':
-    unittest.main()
+          """"""
 
 
