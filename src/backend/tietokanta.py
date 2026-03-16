@@ -8,6 +8,8 @@ from sqlalchemy.sql.coercions import expect
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 #from schemas import TeeTilausSchema, PaivitaTilausSchema, PaivitaSaatavuusSchema, AnnaSaatavuusSchema
 #from models import Tilaus
+from contextlib import asynccontextmanager
+
 
 # from src.frontend.tilaus import Tilaus
 
@@ -64,11 +66,13 @@ def get_session2():
 SessionDep1 = Annotated[Session, Depends(get_session1)]
 SessionDep2 = Annotated[Session, Depends(get_session2)]
 
-app = FastAPI()
-
-@app.on_event("startup")
-def on_startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     create_kannat()
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
 @app.post("/tilaus/", tags=["Tilaus"])
 def tee_tilaus(tilaus: TilausMalli, session: SessionDep1) -> TilausMalli:
     session.add(tilaus)
