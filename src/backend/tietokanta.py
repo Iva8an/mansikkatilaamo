@@ -79,6 +79,17 @@ def tee_tilaus(tilaus: TilausMalli, session: SessionDep1) -> TilausMalli:
     session.commit()
     session.refresh(tilaus)
     return tilaus
+@app.get("/tilaus/{pvm}", tags=["Tilaus"])
+def anna_tilaus(pvm: str, session: SessionDep1):
+   try:
+       with Session(engine1) as session:
+           statement = select(TilausMalli).where(TilausMalli.pvm == pvm)
+           results = session.exec(statement)
+           tilaus = results.all()
+           return tilaus
+   except Exception as e:
+       return {"virhe": e}
+
 @app.get("/saatavuus/{pvm}", tags=["Saatavuus"])
 async def saatavuus_rajoitteet(pvm: str, session: SessionDep2) -> int:
     try:
