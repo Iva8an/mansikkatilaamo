@@ -12,7 +12,7 @@ def pohjustus():
     if "max" not in st.session_state:
         st.session_state.max = 1
     if "mansikkahinta" not in st.session_state:
-        st.session_state.mansikkahinta = 0
+        st.session_state.mansikkahinta = "valitse päivä ensin "
 
 
 def notkalenteri():
@@ -38,7 +38,7 @@ def kalenteri():
     data = vastaus.json()
 
     try:
-        st.session_state.max = data[0]
+        st.session_state.max = min(data[0], 10)
         st.session_state.mansikkahinta = data[1]
     except:
         st.session_state.tila = "virhe"
