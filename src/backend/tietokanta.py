@@ -91,12 +91,13 @@ def anna_tilaus(pvm: str, session: SessionDep1):
        return {"virhe": e}
 
 @app.get("/saatavuus/{pvm}", tags=["Saatavuus"])
-async def saatavuus_rajoitteet(pvm: str, session: SessionDep2) -> int:
+async def saatavuus_rajoitteet(pvm: str, session: SessionDep2) -> list[int]:
     try:
         saatavuus = session.exec(select(SaatavuusMalli.laatikodenMaara).where(SaatavuusMalli.pvm == pvm)).first()
-        return saatavuus
+        hinta = session.exec(select(SaatavuusMalli.hinta).where(SaatavuusMalli.pvm == pvm)).first()
+        return [saatavuus, hinta]
     except Exception as e:
-        return {"virhe": e}
+        return [0,-1]
 
 @app.post("/saatavuus/", tags=["Saatavuus"])
 def lisaa_saatavuus(saatavuus: SaatavuusMalli, session: SessionDep2) -> SaatavuusMalli:
