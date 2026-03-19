@@ -1,13 +1,18 @@
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import DeclarativeBase
+from sqlmodel import Field, SQLModel
 
 
+class TilausMalli(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    email: str = Field(index=True)
+    maara: int | None = Field(default=0, index=True)
+    puh: str
+    muuta: str
+    pvm: str
+    paivitettu: bool
 
-class Base(DeclarativeBase):
-    pass
-
-class Tilaus(Base):
-    __tablename__ = 'tilaukset'
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    description = Column(String)
+class SaatavuusMalli(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    pvm: str
+    laatikoidenMaara: int
+    hinta: int
+    max: int
