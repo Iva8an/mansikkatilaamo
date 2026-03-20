@@ -1,26 +1,15 @@
+import subprocess
 import os
-from fastcrud import FastCRUD, crud_router
-from dotenv import load_dotenv
-from sqlite3 import Error
 from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, Query
-from sqlalchemy.sql.coercions import expect
-from sqlmodel import Field, Session, SQLModel, create_engine, select
-#from schemas import TeeTilausSchema, PaivitaTilausSchema, PaivitaSaatavuusSchema, AnnaSaatavuusSchema
-#from models import Tilaus
+from sqlmodel import Session, SQLModel, create_engine, select
 from contextlib import asynccontextmanager
 from models import TilausMalli, SaatavuusMalli
+from sheets import suorita_sheet
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.interval import IntervalTrigger
 
-
-# from src.frontend.tilaus import Tilaus
-
-
-# Tässä lataan ympäristö muuttujia (mikäli niitä tarvitaan)
-
-# Ensin teen SQLModel, typescript mallisesti tilaus hahmon,
-# joka tulee olemaan pohja yhdelle tilaukselle
-
-
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 tilauskanta_nimi = "tilauskanta.db"
 saatavuuskanta_nimi = "saatavuuskanta.db"
 # sqlite:/// viittaa siihen, että kanta on olemassa vain sinä hetkenä, kun  ohjelma on käynnissä
@@ -51,10 +40,33 @@ def get_session2():
 SessionDep1 = Annotated[Session, Depends(get_session1)]
 SessionDep2 = Annotated[Session, Depends(get_session2)]
 
+scheduler = AsyncIOScheduler()
+steamlit_process = None
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global streamlit_process
+    # Käynnistys
     create_kannat()
+    streamlit_process = subprocess.Popen(
+        ["streamlit", "run", os.path.join(BASE_DIR, "..", "frontend", "app.py"), "--server.port", "8501"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
+    suorita_sheet()
+    scheduler.add_job(
+        suorita_sheet,
+        trigger=IntervalTrigger(hours=1),
+        id="sheets_job",
+        replace_existing=True
+    )
+    scheduler.start()
     yield
+    # Sammutus - pysäytä Streamlit siististi
+    if streamlit_process:
+        streamlit_process.terminate()
+        streamlit_process.wait()
+    scheduler.shutdown()
 
 app = FastAPI(lifespan=lifespan)
 

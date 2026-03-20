@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "aiosqlite>=0.22.1",
+    "apscheduler>=3.11.2",
     "crud>=0.1",
     "fastapi[standard]>=0.133.0",
     "fastcrud>=0.21.0",

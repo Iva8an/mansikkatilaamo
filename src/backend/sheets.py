@@ -1,9 +1,9 @@
 import gspread
+import requests
+import random
 from google.oauth2.service_account import Credentials
 from translate import Translator
 from datetime import datetime
-import requests
-import random
 
 def alustus() -> dict:
     alustettu = {}
@@ -81,7 +81,7 @@ def suorita_sheet():
 
     requests.post("http://localhost:8000/saatavuus/", json=saatavuus_tanaan)
 
-    uudet_tilaukset = requests.get(f"http://localhost:8000/tilaus/{tanaan}")
+    """uudet_tilaukset = requests.get(f"http://localhost:8000/tilaus/{tanaan}")
     tilaukset = uudet_tilaukset.json()[0]
     for tilaus in tilaukset:
         sheet_tilaus = [
@@ -92,6 +92,10 @@ def suorita_sheet():
                 tilaus.get("puh"),
                 tilaus.get("muuta"),
                 tilaus.get("pvm"),
+                tilaus.get("paivitettu")
              ]
         ]
         tilaus_sheet.update(f"A2:G{len(tilaukset)}", sheet_tilaus)
+"""
+"""if __name__ == "__main__":
+    suorita_sheet()"""

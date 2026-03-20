@@ -1,7 +1,7 @@
 import pytest
 import requests
 from google.oauth2.service_account import Credentials
-from src.backend.sheets import saatavuus_id, tilaus_id, tilaus_sheet, saatavuus_sheet
+#from src.backend.sheets import saatavuus_id, tilaus_id, tilaus_sheet, saatavuus_sheet
 
  
 def testaa_saatavuus_sheet_yhteys():

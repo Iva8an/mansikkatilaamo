@@ -5,12 +5,10 @@ import streamlit as st
 import requests
 from datetime import date, datetime
 import random
+import funktiot as f
 
 if "tila" not in st.session_state:
     st.session_state.tila = "kalenteri"
-import funktiot as f
-
-
 
 f.pohjustus()
 if st.session_state.tila != "valmis":

@@ -21,9 +21,8 @@ def test_tee_tilaus(session: Session):
     app.dependency_overrides[get_session1] = get_session_override
 
     client = TestClient(app)
-
     response1 = client.post(
-        "/tilaus/", json={"id": 123, "email": "moikku@gmail.fi", "maara": 2, "puh": "05042314", "muuta": "blabla", "pvm": "2026-09-09"}
+        "/tilaus/", json={"id": 123, "email": "moikku@gmail.fi", "maara": 2, "puh": "05042314", "muuta": "blabla", "pvm": "2026-09-09", "paivitettu": False}
     )
 
     response2 = client.get("/tilaus/{2026-09-09}")
@@ -46,6 +45,7 @@ def test_tee_tilaus(session: Session):
     assert data["puh"] == "05042314"
     assert data["muuta"] == "blabla"
     assert data["pvm"] == "2026-09-09"
+    assert data["paivitettu"] == False
 
 
 
