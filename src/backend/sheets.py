@@ -47,65 +47,50 @@ def alustus() -> dict:
     alustettu.update({"Tilaus-sheet": tilaus_sheet})
     return alustettu
 
-def suorita_saatavuus():
-    alustettu = alustus()
+def suorita_saatavuus(alustettu):
     saatavuus_sheet = alustettu["Saatavuus-sheet"]
     tilaus_sheet = alustettu["Tilaus-sheet"]
     tanaan = alustettu["Tanaan"]
 
-    paivamaarat = saatavuus_sheet.col_values(1)
+    rivit = saatavuus_sheet.get_all_records()
+    saatavuus_lista = []
+    for rivi in rivit:
+        if rivi["päivämäärä"] >= tanaan:  # muuta "pvm" sheetin otsikon mukaan
+            saatavuus_lista.append({
+                "id": random.randrange(1000000, 10000000000),
+                "pvm": rivi["päivämäärä"],
+                "laatikoidenMaara": int(rivi["laatikoiden määrä"]),
+                "hinta": int(rivi["kappale hinta"]),
+                "max": int(rivi["max"])
+            })
 
-    paivamaara_cells = {}
-    laatikot_cells = {}
-    hinta_cells = {}
-    max_cells = {}
+    requests.post("http://localhost:8000/saatavuus/", json=saatavuus_lista)
 
-    for i in range(1, len(paivamaarat)):
-        paivamaara_cells.update({paivamaarat[i] : f"A{i+1}"})
-        laatikot_cells.update({paivamaarat[i]: f"B{i+1}"})
-        hinta_cells.update({paivamaarat[i]: f"C{i+1}"})
-        max_cells.update({paivamaarat[i]: f"D{i+1}"})
-    paivamaara_tanaan = saatavuus_sheet.acell(f"{paivamaara_cells.get(tanaan)}").value
-    laatikot_tanaan = saatavuus_sheet.acell(f"{laatikot_cells.get(tanaan)}").value
-    hinta_tanaan = saatavuus_sheet.acell(f"{hinta_cells.get(tanaan)}").value
-    max_tanaan = saatavuus_sheet.acell(f"{max_cells.get(tanaan)}").value
-
-    saatavuus_tanaan = [{
-        "id": random.randrange(1000000,10000000000),
-        "pvm" : f"{paivamaara_tanaan}",
-        "laatikoiden_maara" : laatikot_tanaan,
-        "laatikoidenMaara" : int(laatikot_tanaan),
-        "hinta": hinta_tanaan,
-        "max": max_tanaan
-    }]
-
-    requests.post("http://localhost:8000/saatavuus/", json=saatavuus_tanaan)
-
-def suorita_tilaus():
-    alustettu = alustus()
+def suorita_tilaus(alustettu):
     saatavuus_sheet = alustettu["Saatavuus-sheet"]
     tilaus_sheet = alustettu["Tilaus-sheet"]
     tanaan = alustettu["Tanaan"]
-    uudet_tilaukset = requests.get(f"http://localhost:8000/tilaus/{tanaan}")
-    tilaukset = uudet_tilaukset.json()[0]
+    response = requests.get("http://localhost:8000/tilaus/synkronoimattomat")
+    tilaukset = response.json()
+
     for tilaus in tilaukset:
-        sheet_tilaus = [
-            [
-                tilaus.get("id"),
-                tilaus.get("email"),
-                tilaus.get("maara"),
-                tilaus.get("puh"),
-                tilaus.get("muuta"),
-                tilaus.get("pvm"),
-             ]
-        ]
-        tilaus_sheet.update(f"A2:G{len(tilaukset)}", sheet_tilaus)
+        tilaus_sheet.append_row([
+            tilaus["id"],
+            tilaus["email"],
+            tilaus["maara"],
+            tilaus["puh"],
+            tilaus["muuta"],
+            tilaus["pvm"]
+        ])
 
-_alustettu = False
+    # Merkitse synkronoiduiksi
+    requests.post("http://localhost:8000/tilaus/merkitse-synkronoiduksi",json=[t["id"] for t in tilaukset])
+
+_alustettu = None
 def suorita_sheet():
     global _alustettu
     if not _alustettu:
-        alustus()
-        _alustettu = True
-    suorita_saatavuus()
-    suorita_tilaus()
+        _alustettu = alustus()
+
+    suorita_saatavuus(_alustettu)
+    suorita_tilaus(_alustettu)

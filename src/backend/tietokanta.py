@@ -85,13 +85,26 @@ def tee_tilaus(tilaus: TilausMalli, session: SessionDep1) -> TilausMalli:
 @app.get("/tilaus/{pvm}", tags=["Tilaus"])
 def anna_tilaus(pvm: str, session: SessionDep1):
    try:
-       with Session(engine1) as session:
-           statement = select(TilausMalli).where(TilausMalli.pvm == pvm)
-           results = session.exec(statement)
-           tilaus = results.all()
-           return tilaus
+        statement = select(TilausMalli).where(TilausMalli.pvm == pvm)
+        results = session.exec(statement)
+        tilaus = results.all()
+        return tilaus
    except Exception as e:
        return {"virhe": e}
+
+@app.get("/tilaus/synkronoimattomat", tags=["Tilaus"])
+def anna_synkronoimattomat(session: SessionDep1):
+    statement = select(TilausMalli).where(TilausMalli.synkronoitu == False)
+    return session.exec(statement).all()
+
+@app.post("/tilaus/merkitse-synkronoiduksi", tags=["Tilaus"])
+def merkitse_synkronoiduksi(ids: List[int], session: SessionDep1):
+    for id in ids:
+        tilaus = session.get(TilausMalli, id)
+        if tilaus:
+            tilaus.synkronoitu = True
+    session.commit()
+    return {"merkitty": len(ids)}
 
 @app.get("/saatavuus/{pvm}", tags=["Saatavuus"])
 async def saatavuus_rajoitteet(pvm: str, session: SessionDep2) -> list[int]:
@@ -103,7 +116,7 @@ async def saatavuus_rajoitteet(pvm: str, session: SessionDep2) -> list[int]:
         return [0,0]
 
 @app.post("/saatavuus/", tags=["Saatavuus"])
-def lisaa_saatavuus(saatavuudet: List[SaatavuusMalli], session: SessionDep2) -> SaatavuusMalli:
+def lisaa_saatavuus(saatavuudet: List[SaatavuusMalli], session: SessionDep2) -> List[SaatavuusMalli]:
     for saatavuus in saatavuudet:
         session.add(saatavuus)
     session.commit()

@@ -22,7 +22,8 @@ def test_tee_tilaus(session: Session):
     app.dependency_overrides[get_session1] = get_session_override
     client = TestClient(app)
     response1 = client.post(
-        "/tilaus/", json={"id": 123, "email": "moikku@gmail.fi", "maara": 2, "puh": "05042314", "muuta": "blabla", "pvm": "2026-09-09"}
+        "/tilaus/", json={"id": 123, "email": "moikku@gmail.fi", "maara": 2, "puh": "05042314", "muuta": "blabla",
+                           "pvm": "2026-09-09", "synkronoitu": False}
     )
     assert response1.status_code == 200
     response2 = client.get("/tilaus/2026-09-09")
@@ -33,7 +34,8 @@ def test_tee_tilaus(session: Session):
         "maara": 2,
         "puh": "05042314",
         "muuta": "blabla",
-        "pvm": "2026-09-09"
+        "pvm": "2026-09-09",
+        "synkronoitu": False
     }
     app.dependency_overrides.clear()
     data = response1.json()
@@ -44,6 +46,7 @@ def test_tee_tilaus(session: Session):
     assert data["puh"] == "05042314"
     assert data["muuta"] == "blabla"
     assert data["pvm"] == "2026-09-09"
+    assert data["synkronoitu"] == False
 
 
 def test_saatavuus(session: Session):
@@ -57,14 +60,12 @@ def test_saatavuus(session: Session):
     )
     response2 = client.get("/saatavuus/2026-09-09")
     assert response2.status_code == 200
-    print(response2.json())
     assert response2.json() == [4, 20]
     app.dependency_overrides.clear()
     data = response1.json()
-
     assert response1.status_code == 200
-    """assert data["id"] == 123
-    assert data["pvm"] == "2026-09-09"
-    assert data["laatikoidenMaara"] == 4
-    assert data["hinta"] == 20
-    assert data["max"] == 20"""
+    assert data[0]["id"] == 123
+    assert data[0]["pvm"] == "2026-09-09"
+    assert data[0]["laatikoidenMaara"] == 4
+    assert data[0]["hinta"] == 20
+    assert data[0]["max"] == 20

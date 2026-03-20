@@ -8,8 +8,10 @@ class TilausMalli(SQLModel, table=True):
     puh: str
     muuta: str
     pvm: str
-
+    synkronoitu: bool = Field(default=False)
 class SaatavuusMalli(SQLModel, table=True):
+    model_config = {"from_attributes": True}
+
     id: int | None = Field(default=None, primary_key=True)
     pvm: str
     laatikoidenMaara: int
