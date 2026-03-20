@@ -8,7 +8,6 @@ class TilausMalli(SQLModel, table=True):
     puh: str
     muuta: str
     pvm: str
-    paivitettu: bool
 
 class SaatavuusMalli(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)

@@ -1,5 +1,6 @@
 import subprocess
 import os
+from datetime import datetime, timedelta
 from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlmodel import Session, SQLModel, create_engine, select
@@ -8,8 +9,10 @@ from models import TilausMalli, SaatavuusMalli
 from sheets import suorita_sheet
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+from typing import List
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 tilauskanta_nimi = "tilauskanta.db"
 saatavuuskanta_nimi = "saatavuuskanta.db"
 # sqlite:/// viittaa siihen, että kanta on olemassa vain sinä hetkenä, kun  ohjelma on käynnissä
@@ -47,20 +50,23 @@ steamlit_process = None
 async def lifespan(app: FastAPI):
     global streamlit_process
     # Käynnistys
+
     create_kannat()
+
     streamlit_process = subprocess.Popen(
         ["streamlit", "run", os.path.join(BASE_DIR, "..", "frontend", "app.py"), "--server.port", "8501"],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL
     )
-    suorita_sheet()
     scheduler.add_job(
         suorita_sheet,
         trigger=IntervalTrigger(hours=1),
         id="sheets_job",
-        replace_existing=True
+        replace_existing=True,
+        next_run_time=datetime.now() + timedelta(seconds=5),
     )
     scheduler.start()
+
     yield
     # Sammutus - pysäytä Streamlit siististi
     if streamlit_process:
@@ -97,8 +103,10 @@ async def saatavuus_rajoitteet(pvm: str, session: SessionDep2) -> list[int]:
         return [0,0]
 
 @app.post("/saatavuus/", tags=["Saatavuus"])
-def lisaa_saatavuus(saatavuus: SaatavuusMalli, session: SessionDep2) -> SaatavuusMalli:
-    session.add(saatavuus)
+def lisaa_saatavuus(saatavuudet: List[SaatavuusMalli], session: SessionDep2) -> SaatavuusMalli:
+    for saatavuus in saatavuudet:
+        session.add(saatavuus)
     session.commit()
-    session.refresh(saatavuus)
-    return saatavuus
+    for saatavuus in saatavuudet:
+        session.refresh(saatavuus)
+    return saatavuudet

@@ -47,7 +47,7 @@ def alustus() -> dict:
     alustettu.update({"Tilaus-sheet": tilaus_sheet})
     return alustettu
 
-def suorita_sheet():
+def suorita_saatavuus():
     alustettu = alustus()
     saatavuus_sheet = alustettu["Saatavuus-sheet"]
     tilaus_sheet = alustettu["Tilaus-sheet"]
@@ -70,18 +70,23 @@ def suorita_sheet():
     hinta_tanaan = saatavuus_sheet.acell(f"{hinta_cells.get(tanaan)}").value
     max_tanaan = saatavuus_sheet.acell(f"{max_cells.get(tanaan)}").value
 
-    saatavuus_tanaan = {
+    saatavuus_tanaan = [{
         "id": random.randrange(1000000,10000000000),
         "pvm" : f"{paivamaara_tanaan}",
         "laatikoiden_maara" : laatikot_tanaan,
         "laatikoidenMaara" : int(laatikot_tanaan),
         "hinta": hinta_tanaan,
         "max": max_tanaan
-    }
+    }]
 
     requests.post("http://localhost:8000/saatavuus/", json=saatavuus_tanaan)
 
-    """uudet_tilaukset = requests.get(f"http://localhost:8000/tilaus/{tanaan}")
+def suorita_tilaus():
+    alustettu = alustus()
+    saatavuus_sheet = alustettu["Saatavuus-sheet"]
+    tilaus_sheet = alustettu["Tilaus-sheet"]
+    tanaan = alustettu["Tanaan"]
+    uudet_tilaukset = requests.get(f"http://localhost:8000/tilaus/{tanaan}")
     tilaukset = uudet_tilaukset.json()[0]
     for tilaus in tilaukset:
         sheet_tilaus = [
@@ -92,10 +97,15 @@ def suorita_sheet():
                 tilaus.get("puh"),
                 tilaus.get("muuta"),
                 tilaus.get("pvm"),
-                tilaus.get("paivitettu")
              ]
         ]
         tilaus_sheet.update(f"A2:G{len(tilaukset)}", sheet_tilaus)
-"""
-"""if __name__ == "__main__":
-    suorita_sheet()"""
+
+_alustettu = False
+def suorita_sheet():
+    global _alustettu
+    if not _alustettu:
+        alustus()
+        _alustettu = True
+    suorita_saatavuus()
+    suorita_tilaus()
