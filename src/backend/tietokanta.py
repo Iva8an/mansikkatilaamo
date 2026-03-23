@@ -82,6 +82,18 @@ def tee_tilaus(tilaus: TilausMalli, session: SessionDep1) -> TilausMalli:
     session.commit()
     session.refresh(tilaus)
     return tilaus
+
+@app.get("/tilaus/synkronoimattomat", tags=["Tilaus"])
+def anna_synkronoimattomat(session: SessionDep1):
+    kaikki = session.exec(select(TilausMalli)).all()
+    print(f"Kaikki tilaukset: {kaikki}")
+
+    statement = select(TilausMalli).where(TilausMalli.synkronoitu == False)
+    tilaukset = session.exec(statement).all()
+    print(f"Synkronoimattomat: {tilaukset}")
+
+    return tilaukset
+
 @app.get("/tilaus/{pvm}", tags=["Tilaus"])
 def anna_tilaus(pvm: str, session: SessionDep1):
    try:
@@ -92,10 +104,6 @@ def anna_tilaus(pvm: str, session: SessionDep1):
    except Exception as e:
        return {"virhe": e}
 
-@app.get("/tilaus/synkronoimattomat", tags=["Tilaus"])
-def anna_synkronoimattomat(session: SessionDep1):
-    statement = select(TilausMalli).where(TilausMalli.synkronoitu == False)
-    return session.exec(statement).all()
 
 @app.post("/tilaus/merkitse-synkronoiduksi", tags=["Tilaus"])
 def merkitse_synkronoiduksi(ids: List[int], session: SessionDep1):

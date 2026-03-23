@@ -67,12 +67,11 @@ def suorita_saatavuus(alustettu):
     requests.post("http://localhost:8000/saatavuus/", json=saatavuus_lista)
 
 def suorita_tilaus(alustettu):
-    saatavuus_sheet = alustettu["Saatavuus-sheet"]
     tilaus_sheet = alustettu["Tilaus-sheet"]
-    tanaan = alustettu["Tanaan"]
     response = requests.get("http://localhost:8000/tilaus/synkronoimattomat")
     tilaukset = response.json()
 
+    print(f"Tilauksia lähetettävänä: {len(tilaukset)}")
     for tilaus in tilaukset:
         tilaus_sheet.append_row([
             tilaus["id"],
